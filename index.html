@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tharo Car Racing Game</title>
+  <style>
+    body {
+      background: #151515;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+    }
+    canvas {
+      background: #333;
+      border: 4px solid white;
+      max-width: 95%;
+    }
+    button {
+      padding: 12px 25px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏎️ Tharo Car Racing Game</h1>
+  <h2 id="score">Score: 0</h2>
+  <canvas id="game" width="350" height="500"></canvas>
+  <p>Use Left and Right Arrow Keys</p>
+  <button onclick="restart()">Restart Game</button>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    let player, traffic, score, over, frame, speed;
+
+    function restart() {
+      player = {x: 155, y: 410, w: 40, h: 70};
+      traffic = [];
+      score = 0;
+      frame = 0;
+      speed = 4;
+      over = false;
+    }
+
+    document.addEventListener("keydown", e => {
+      if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (over) return;
+      if (e.key === "ArrowLeft") {
+        player.x = Math.max(35, player.x - 25);
+      }
+      if (e.key === "ArrowRight") {
+        player.x = Math.min(275, player.x + 25);
+      }
+    });
+
+    function drawCar(car, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(car.x, car.y, car.w, car.h);
+      ctx.fillStyle = "#aeeaff";
+      ctx.fillRect(car.x + 6, car.y + 10, car.w - 12, 15);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, 350, 500);
+      ctx.fillStyle = "#258b36";
+      ctx.fillRect(0, 0, 350, 500);
+      ctx.fillStyle = "#333";
+      ctx.fillRect(25, 0, 300, 500);
+
+      ctx.fillStyle = "white";
+      for (let y = (frame * speed) % 80 - 80; y < 500; y += 80) {
+        ctx.fillRect(125, y, 5, 40);
+        ctx.fillRect(225, y, 5, 40);
+      }
+
+      if (!over) {
+        frame++;
+        if (frame % 65 === 0) {
+          const lanes = [55, 155, 255];
+          traffic.push({
+            x: lanes[Math.floor(Math.random() * 3)],
+            y: -80, w: 40, h: 70
+          });
+        }
+
+        for (const car of traffic) {
+          car.y += speed;
+          if (player.x < car.x + car.w &&
+              player.x + player.w > car.x &&
+              player.y < car.y + car.h &&
+              player.y + player.h > car.y) {
+            over = true;
+          }
+        }
+
+        traffic = traffic.filter(car => {
+          if (car.y > 500) {
+            score++;
+            speed = 4 + Math.floor(score / 5);
+            return false;
+          }
+          return true;
+        });
+      }
+
+      traffic.forEach(car => drawCar(car, "#ffc400"));
+      drawCar(player, "red");
+      document.getElementById("score").textContent =
+        "Score: " + score;
+
+      if (over) {
+        ctx.fillStyle = "white";
+        ctx.font = "bold 35px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", 175, 240);
+      }
+      requestAnimationFrame(update);
+    }
+
+    restart();
+    update();
+  </script>
+</body>
+</html>
